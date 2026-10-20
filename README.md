@@ -29,9 +29,11 @@ AIエンジニアリング実践講座（AIE2026）の演習と宿題で使う�
 uv run pytest -q
 uv run python -m app.ask "LoRAとは何ですか？"
 uv run python -m app.ask --chat
+uv run python -m app.ask --benchmark "LoRAとは何ですか？"
 ```
 
 `--chat` を指定すると、同じ会話の履歴を保って続けて質問できます。終了するときは `exit` または `quit` を入力してください。どちらの実行方法でも、入力・出力トークン数が表示されます。
+`--benchmark` を指定すると応答時間とトークン数を表示し、結果を `results/benchmark.csv` に追記します。対話モードでは各ターンが1行ずつ記録されます。計測時はSDKの自動再試行を無効にするため、時間は各API試行の応答時間です。通常実行ではSDK既定の再試行設定を維持します。
 
 詳しい手順は [lectures/01/problem.md](lectures/01/problem.md) を見てください。
 
@@ -88,6 +90,10 @@ pyproject.toml / uv.lock  依存パッケージとその固定版
 
 ```bash
 AIE_MODEL=gemini-3.5-flash uv run python -m app.ask "LoRAとは何ですか？"
+AIE_MODEL=gemini-3.5-flash-lite uv run python -m app.ask --benchmark "LoRAとは何ですか？"
+AIE_MODEL=gemini-3.6-flash uv run python -m app.ask --benchmark "LoRAとは何ですか？"
+AIE_MODEL=gemini-3.8-flash uv run python -m app.ask --benchmark "LoRAとは何ですか？"
+AIE_MODEL=gemini-3.5-flash-lite uv run python -m app.ask --chat --benchmark
 ```
 
-無料枠には1分あたり・1日あたりのリクエスト上限があります。上限は [Gemini API のレート制限のページ](https://ai.google.dev/gemini-api/docs/rate-limits) で確認してください。
+モデル名は利用可能なものを指定してください。`results/benchmark.csv` は同じモデルや質問で試行した結果が追記されるため、比較できます。無料枠には1分あたり・1日あたりのリクエスト上限があります。上限は [Gemini API のレート制限のページ](https://ai.google.dev/gemini-api/docs/rate-limits) で確認してください。レート制限に達した場合も再試行せず、失敗とHTTPエラーコードを記録します。
