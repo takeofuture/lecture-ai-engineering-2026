@@ -1,0 +1,25 @@
+{
+  "experiment": "Day2 homework advanced: glossary SFT vs lookup",
+  "config": {
+    "base_model": "Qwen/Qwen3.5-0.8B",
+    "revision": "2fc06364715b967f1860aea9cf38778875588b17",
+    "seed": 42,
+    "num_train_epochs": 8,
+    "lr": 0.0002,
+    "lora_r": 16,
+    "lora_alpha": 32,
+    "max_seq_len": 512,
+    "max_new_tokens": 140
+  },
+  "dataset_rows": 116,
+  "evaluation_questions": 14,
+  "categories": {
+    "学習時と同じ質問": 6,
+    "言い換え": 6,
+    "用語集にない語": 2
+  },
+  "training_seconds": 336.9,
+  "training_loss": 0.6064700023752863,
+  "note": "手動正解率は未採点。CSVの *_correct 列に記入すること。検索は単純部分文字列一致でRAGではない。",
+  "retrieval_hit_rate": 0.8571428571428571
+}
