@@ -7,6 +7,7 @@
 import json
 from functools import cache
 from pathlib import Path
+import random
 
 from app.config import api_error_message
 
@@ -130,3 +131,58 @@ def search_graph(query: str) -> str:
         return json.dumps({"error": str(e)}, ensure_ascii=False)
     except APIError as e:
         return json.dumps({"error": api_error_message(e.code)}, ensure_ascii=False)
+
+def make_quiz(lecture: int) -> str:
+    """指定した回の用語集から確認問題を1問作成する。
+
+    「第2回の確認問題を出して」など、講義内容の復習や
+    確認問題の作成を求められたときに使用する。
+    lectureには対象となる講義回の番号を指定する。
+    """
+    glossary = load_glossary()
+
+    candidates = [
+        item for item in glossary
+        if item.get("lecture") == lecture
+    ]
+
+    if not candidates:
+        return json.dumps(
+            {"error": f"第{lecture}回の用語が見つかりません"},
+            ensure_ascii=False
+        )
+
+    item = random.choice(candidates)
+
+    return json.dumps(
+        {
+            "question": f"「{item['term']}」の意味は？",
+            "answer": item["definition"]
+        },
+        ensure_ascii=False
+    )
+
+
+def save_learning_log(title: str, content: str) -> str:
+    """利用者が学んだ内容を学習ログとして保存する。
+
+    「学習内容を記録して」「学習ログに保存して」など、
+    保存を明示的に依頼された場合にこのツールを呼び出す。
+    実際のファイル書き込み前の承認はプログラム側で行われる。
+    会話上で事前に承認を求める必要はない。
+    titleはログのタイトル、contentは保存する学習内容。
+    """
+    from datetime import datetime, timezone
+    from uuid import uuid4
+
+    log_dir = Path(__file__).resolve().parent.parent / "learning_log"
+    log_dir.mkdir(parents=True, exist_ok=True)
+
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"{timestamp}_{uuid4().hex[:8]}.md"
+    path = log_dir / filename
+
+    text = f"# {title}\n\n{content}\n"
+    path.write_text(text, encoding="utf-8")
+
+    return f"学習ログを保存しました: {path}"
