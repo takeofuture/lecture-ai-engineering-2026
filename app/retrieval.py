@@ -138,6 +138,47 @@ def search(query: str) -> list[dict]:
         return [dict(row) for row in rows]
 
 
+
+def expand_neighbor_pages(hits: list[dict]) -> list[dict]:
+    """検索結果に同一資料の前後1ページを追加し、重複を除去する。"""
+    pages = load_pages(RAG_SOURCE)
+
+    # 資料IDとページ番号で対応付ける
+    lookup = {
+        (page["document_id"], page["page"]): page
+        for page in pages
+    }
+
+    results = []
+    seen = set()
+
+    def add(page):
+        page_id = page["page_id"]
+        if page_id not in seen:
+            seen.add(page_id)
+            results.append(page)
+
+    # 元の検索結果を先に保持する
+    for hit in hits:
+        add(hit)
+
+    # 各検索結果の前後1ページを追加する
+    for hit in hits:
+        doc_id = hit["document_id"]
+        page_num = hit["page"]
+
+        for neighbor_num in (page_num - 1, page_num + 1):
+            neighbor = lookup.get((doc_id, neighbor_num))
+            if neighbor is not None:
+                add({
+                    **neighbor,
+                    "source": "neighbor",
+                    "distance": None,
+                })
+
+    return results
+
+
 def search_graph(query: str) -> dict:
     """ベクトル検索を入口に、前後ページと共通用語で候補を広げる。"""
     pages = {page["page_id"]: page for page in load_pages(RAG_SOURCE)}
