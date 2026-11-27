@@ -147,8 +147,19 @@ def make_quiz(lecture: int) -> str:
     ]
 
     if not candidates:
+        available = sorted({
+            item["lecture"]
+            for item in glossary
+            if isinstance(item.get("lecture"), int)
+        })
+
         return json.dumps(
-            {"error": f"第{lecture}回の用語が見つかりません"},
+            {
+                "error": f"第{lecture}回のクイズは作成できません。",
+                "reason": "指定した回の用語が用語集に登録されていません。",
+                "available_lectures": available,
+                "suggestion": "利用可能な講義回を指定して、もう一度質問してください。"
+            },
             ensure_ascii=False
         )
 
