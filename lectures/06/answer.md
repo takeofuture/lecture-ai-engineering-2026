@@ -243,3 +243,73 @@ MCPツールが正常に呼び出され、GeminiはQLoRAに関する確認問題
 
 **結論として、既存のPython関数をMCPツールとして再利用し、正常系と異常系の両方で適切な情報を返せることを確認した。**
 
+
+### 宿題3：発展 — VS CodeのMCP設定方法の調査と比較
+
+#### 調査対象
+
+GitHub Codespacesで使用しているVS Codeを対象として、MCPサーバーの設定方法を調査した。
+
+調査日：2026年11月27日
+
+参照した公式資料：
+
+- [Add and use MCP servers in VS Code](https://code.visualstudio.com/docs/agent-customization/mcp-servers)
+- [MCP configuration reference](https://code.visualstudio.com/docs/agents/reference/mcp-configuration)
+- [Manage and troubleshoot MCP servers](https://code.visualstudio.com/docs/agents/run/manage-mcp-servers)
+
+#### 1. MCPサーバーの登録方法
+
+VS Codeでは、コマンドパレットから`MCP: Add Server`を実行するか、CopilotのMCPサーバー管理画面からサーバーを追加できる。
+
+接続方式として、ローカルコマンドを実行するstdio方式と、外部URLに接続するHTTP方式が利用できる。
+
+#### 2. 設定ファイルの場所
+
+新しいCopilot方式では、主に次の設定場所が用意されている。
+
+- プロジェクト単位：プロジェクト直下の`.mcp.json`
+- ユーザー単位：`$COPILOT_HOME/mcp-config.json`、または`~/.copilot/mcp-config.json`
+
+プロジェクト単位の設定は、Gitで共有できるため、チーム開発に適している。
+
+なお、旧方式の`.vscode/mcp.json`も存在するが、新しいCopilot方式ではプロジェクト直下の`.mcp.json`が推奨されている。
+
+#### 3. 設定形式の比較
+
+| 項目 | VS Code / Copilot | 今回のMCPエージェント |
+|---|---|---|
+| 設定ファイル | `.mcp.json`など | `app/mcp_servers.json` |
+| サーバー定義 | `mcpServers` | 講座の設定形式 |
+| ローカル接続 | `type: "stdio"`と`command`、`args` | `command`、`args` |
+| リモート接続 | `type: "http"`と`url` | `url` |
+| ツール利用 | Copilotが利用 | `app/mcp_agent.py`が利用 |
+
+どちらもMCPを使用しているため、ローカルのサーバープロセスや外部サービスをツールとして利用する基本的な仕組みは共通している。
+
+一方、設定ファイルの場所やJSONの構造、利用可能なツールの管理方法には違いがある。
+
+#### 4. 今回のMCPサーバーとの対応
+
+今回の講座では、次の3つのMCPサーバーを接続した。
+
+- `glossary`：Pythonで作成したローカルMCPサーバー
+- `fetch`：Webページを取得する外部パッケージ
+- `aws`：AWSの公式ドキュメントを検索するリモートMCPサーバー
+
+VS Codeでも同様に、ローカルサーバーには起動コマンドを、リモートサーバーには接続先URLを指定する。
+
+ただし、VS Codeで実際に利用するには、対応する設定形式で登録し、必要な実行環境や認証情報を準備する必要がある。
+
+#### 5. 考察
+
+今回の調査を通して、MCPは特定のエージェントだけに依存する仕組みではなく、異なるクライアントから同じサーバー機能を利用できる標準的なインターフェースであることを理解した。
+
+Pythonで独自に開発したMCPエージェントと、VS CodeのCopilotでは設定ファイルの形式は異なるが、ツールの実装そのものを共通化できる点が大きな利点だと感じた。
+
+一方で、設定ファイルの互換性、認証情報の取り扱い、ローカルサーバーの実行環境には注意が必要である。
+
+特にCodespacesのようなリモート開発環境では、MCPサーバーをどの環境で起動するかを意識する必要がある。
+
+**結論として、MCPを利用することで、エージェントごとにツールの処理を再実装せずに、複数の開発環境から同じ機能を再利用できることが分かった。**
+
